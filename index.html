@@ -196,9 +196,147 @@ textarea:focus{outline:none;border-color:var(--purple);}
 .related-item:hover{background:#CECBF6;}
 .expand-hint{font-size:11px;color:var(--text3);margin-top:7px;cursor:pointer;}
 .vempty{text-align:center;padding:2rem 0;color:var(--text2);font-size:13px;}
+
+/* ── Mobile bottom nav ── */
+.mobile-nav{display:none;}
+
+/* ── Mobile drawer overlay ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:50;}
+.drawer-overlay.open{display:block;}
+.drawer{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--bg);border-right:1px solid var(--border);z-index:51;transform:translateX(-100%);transition:transform .22s ease;overflow-y:auto;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1px solid var(--border);}
+.drawer-title{font-size:13px;font-weight:500;color:var(--text);}
+.drawer-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:16px;border-radius:var(--radius);}
+.drawer-close:hover{background:var(--bg2);}
+.drawer-body{padding:8px 0 24px;}
+
+/* ── Mobile task trigger button ── */
+.mobile-task-btn{display:none;width:100%;text-align:left;padding:10px 16px;font-size:13px;color:var(--text2);background:var(--bg2);border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;}
+.mobile-task-btn span.badge{background:var(--purple);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;}
+
+@media(max-width:640px){
+  body{font-size:15px;}
+
+  /* tab bar — no left padding on mobile */
+  .tab-bar{padding:0;position:sticky;top:0;z-index:40;background:var(--bg);}
+  .tab{padding:10px 18px 9px;font-size:13px;}
+
+  /* tab content padding */
+  .tab-content{padding:.75rem 0;}
+
+  /* hide desktop two-col, go single column */
+  .two-col{flex-direction:column;}
+  .left-col{display:none;}
+  .right-col{padding-left:0;padding:0 12px;}
+  .vocab-sidebar{display:none;}
+
+  /* show mobile task button above calendar */
+  .mobile-task-btn{display:flex;}
+
+  /* calendar: single month only */
+  .cal-months{grid-template-columns:1fr;}
+  .cal-months > div:last-child{display:none;}
+  .cal-nav{padding:0 4px;}
+  .cal-day{font-size:13px;}
+  .cal-dow{font-size:11px;}
+
+  /* stats */
+  .month-stats{gap:6px;}
+  .stat-num{font-size:22px;}
+  .stat-label{font-size:11px;}
+
+  /* cards: single column */
+  .card-grid{grid-template-columns:1fr;}
+  .card{padding:.85rem 1rem;}
+
+  /* search + filters full width */
+  .search-row input{font-size:15px;padding:9px 12px;}
+  .tag{font-size:13px;padding:5px 12px;}
+  .vtype-tab{font-size:13px;padding:5px 14px;}
+
+  /* modal full screen on mobile */
+  .modal{width:100%;max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;position:fixed;bottom:0;left:0;right:0;transform:translateY(100%);}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-overlay{align-items:flex-end;}
+
+  /* note cards */
+  .note-card{padding:12px 14px;}
+  .note-date{font-size:14px;}
+  .note-field-text{font-size:13px;}
+
+  /* bottom nav */
+  .mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    z-index:40;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .mobile-nav-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:10px 0 8px;cursor:pointer;border:none;background:transparent;
+    font-family:inherit;color:var(--text3);font-size:10px;letter-spacing:.03em;
+    transition:color .12s;
+  }
+  .mobile-nav-btn.active{color:var(--purple);}
+  .mobile-nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* pad content so bottom nav doesn't cover it */
+  .tab-content{padding-bottom:80px;}
+
+  /* vocab sidebar — show as drawer on mobile */
+  .mobile-vocab-sidebar-btn{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:var(--text2);
+    background:var(--bg2);border:1px solid var(--border);
+    border-radius:var(--radius);padding:5px 10px;
+    cursor:pointer;font-family:inherit;margin-bottom:.75rem;
+  }
+
+  /* drawer内部复用sidebar样式 */
+  .drawer .sb-inner{width:100%;padding:12px 14px;}
+  .drawer .sb-progress{margin-top:16px;padding-top:12px;}
+}
 </style>
 </head>
 <body>
+
+<!-- Mobile drawers -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="task-drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">近期课题</span>
+    <span class="drawer-close" onclick="closeDrawer()">✕</span>
+  </div>
+  <div class="drawer-body">
+    <div style="padding:0 14px 8px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">待解决</span>
+      <span onclick="showAddInputDrawer()" style="width:22px;height:22px;border-radius:4px;border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text3);cursor:pointer;line-height:1">+</span>
+    </div>
+    <div style="padding:0 14px 6px;"><input id="task-add-input-drawer" placeholder="输入课题后按回车" onkeydown="handleAddTaskDrawer(event)" style="width:100%;font-size:14px;border:none;border-bottom:1px solid var(--border);background:transparent;color:var(--text);outline:none;padding:4px 0;display:none;font-family:inherit;"/></div>
+    <div id="task-list-drawer" style="padding:0 14px;font-size:13px;"></div>
+    <div style="padding:10px 14px 4px;margin-top:4px;border-top:1px solid var(--border);"><span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;">已解决</span></div>
+    <div id="resolved-list-drawer" style="padding:0 14px;font-size:13px;"></div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="vocab-drawer-overlay" onclick="closeVocabDrawer()"></div>
+<div class="drawer" id="vocab-drawer">
+  <div class="drawer-header">
+    <span class="drawer-title">已掌握动作</span>
+    <span class="drawer-close" onclick="closeVocabDrawer()">✕</span>
+  </div>
+  <div class="drawer-body" style="padding:12px 14px;">
+    <div id="learned-list-drawer"><div class="sb-empty" style="font-size:12px;color:var(--text3);">勾选词条后显示</div></div>
+    <div class="sb-progress" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+      <div class="prog-label">学习进度</div>
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill-drawer" style="width:0%"></div></div>
+      <div class="prog-count" id="prog-count-drawer">0 / 0 个词条</div>
+    </div>
+  </div>
+</div>
 
 <div class="tab-bar">
   <div class="tab active" onclick="switchTab('notes')">课堂记录</div>
@@ -229,6 +367,13 @@ textarea:focus{outline:none;border-color:var(--purple);}
       </div>
     </div>
     <div class="right-col">
+      <!-- mobile: 近期课题 button -->
+      <div id="mobile-task-row" style="display:none;margin-bottom:10px;">
+        <button onclick="openDrawer()" style="width:100%;text-align:left;padding:10px 12px;font-size:13px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">
+          <span>近期课题</span>
+          <span id="mobile-task-badge" style="background:var(--purple);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;display:none"></span>
+        </button>
+      </div>
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="shiftMonths(-1)">◀</button>
         <span style="font-size:12px;color:var(--text2)" id="cal-range"></span>
@@ -268,6 +413,13 @@ textarea:focus{outline:none;border-color:var(--purple);}
       </div>
     </div>
     <div class="right-col">
+      <!-- mobile: 已掌握 drawer button -->
+      <div id="mobile-vocab-row" style="display:none;margin-bottom:10px;">
+        <button onclick="openVocabDrawer()" style="width:100%;text-align:left;padding:10px 12px;font-size:13px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:space-between;">
+          <span>已掌握动作</span>
+          <span id="mobile-learned-count" style="font-size:11px;color:var(--text3)">0 个</span>
+        </button>
+      </div>
       <div class="search-row"><input type="text" id="search" placeholder="搜索法语、日语或中文名称..." oninput="renderVocab()"/></div>
       <div class="vocab-type-tabs">
         <span class="vtype-tab active" data-vtype="all" onclick="switchVType(this)">全部</span>
@@ -340,6 +492,18 @@ textarea:focus{outline:none;border-color:var(--purple);}
     </div>
   </div>
 </div>
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn active" id="nav-notes" onclick="switchTab('notes')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
+    课堂记录
+  </button>
+  <button class="mobile-nav-btn" id="nav-vocab" onclick="switchTab('vocab')">
+    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    词汇库
+  </button>
+</nav>
 
 <script>
 const MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -636,6 +800,96 @@ function renderVocab(){
 }
 
 renderCalendar();renderNoteList();renderVocab();renderTasks();updateLearnedSidebar();
+
+// ── Mobile support ──
+const isMobile=()=>window.innerWidth<=640;
+
+function initMobile(){
+  const mobile=isMobile();
+  document.getElementById('mobile-task-row').style.display=mobile?'block':'none';
+  document.getElementById('mobile-vocab-row').style.display=mobile?'block':'none';
+}
+
+// override switchTab to also update bottom nav
+const _switchTab=switchTab;
+window.switchTab=function(t){
+  _switchTab(t);
+  document.getElementById('nav-notes').classList.toggle('active',t==='notes');
+  document.getElementById('nav-vocab').classList.toggle('active',t==='vocab');
+};
+
+// drawer functions
+function openDrawer(){
+  document.getElementById('task-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  renderTasksDrawer();
+}
+function closeDrawer(){
+  document.getElementById('task-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function openVocabDrawer(){
+  document.getElementById('vocab-drawer').classList.add('open');
+  document.getElementById('vocab-drawer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeVocabDrawer(){
+  document.getElementById('vocab-drawer').classList.remove('open');
+  document.getElementById('vocab-drawer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function showAddInputDrawer(){
+  const i=document.getElementById('task-add-input-drawer');
+  i.style.display='block';i.focus();
+}
+function handleAddTaskDrawer(e){
+  if(e.key==='Enter'){const i=document.getElementById('task-add-input-drawer'),t=i.value.trim();if(t){tasks.push({id:nextTaskId++,text:t,done:false});persist();renderTasks();renderTasksDrawer();updateMobileTaskBadge();}i.value='';i.style.display='none';}
+  else if(e.key==='Escape'){const i=document.getElementById('task-add-input-drawer');i.value='';i.style.display='none';}
+}
+
+function renderTasksDrawer(){
+  const p=tasks.filter(t=>!t.done),d=tasks.filter(t=>t.done);
+  const tl=document.getElementById('task-list-drawer');
+  const rl=document.getElementById('resolved-list-drawer');
+  if(!tl||!rl)return;
+  tl.innerHTML=p.length?p.map(t=>`<div class="task-item" style="padding:8px 0;"><div class="task-cb" onclick="toggleTaskAndSync(${t.id})" style="width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"></div><div style="font-size:13px;color:var(--text);line-height:1.4;">${t.text}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text3);padding:6px 0 10px;">还没有课题</div>';
+  rl.innerHTML=d.length?d.map(t=>`<div class="task-item" style="padding:8px 0;"><div onclick="toggleTaskAndSync(${t.id})" style="width:18px;height:18px;border-radius:4px;border:1.5px solid var(--purple);background:var(--purple);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;">✓</div><div style="font-size:13px;color:var(--text3);text-decoration:line-through;">${t.text}</div></div>`).join(''):'<div style="font-size:12px;color:var(--text3);padding:6px 0;">暂无</div>';
+}
+
+function toggleTaskAndSync(id){
+  const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;persist();renderTasks();renderTasksDrawer();updateMobileTaskBadge();}
+}
+
+function updateMobileTaskBadge(){
+  const pending=tasks.filter(t=>!t.done).length;
+  const badge=document.getElementById('mobile-task-badge');
+  if(badge){badge.style.display=pending>0?'inline':'none';badge.textContent=pending;}
+}
+
+// override updateLearnedSidebar to also update drawer
+const _updateLearnedSidebar=updateLearnedSidebar;
+window.updateLearnedSidebar=function(){
+  _updateLearnedSidebar();
+  const pct=Math.round(learned.size/allVocab*100);
+  const pf=document.getElementById('prog-fill-drawer');
+  const pc=document.getElementById('prog-count-drawer');
+  const ll=document.getElementById('learned-list-drawer');
+  const mc=document.getElementById('mobile-learned-count');
+  if(pf)pf.style.width=pct+'%';
+  if(pc)pc.textContent=`${learned.size} / ${allVocab} 个词条`;
+  if(mc)mc.textContent=`${learned.size} 个`;
+  if(ll){
+    const all=[...actions,...concepts].filter(v=>learned.has(v.french));
+    ll.innerHTML=all.length?all.map(v=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);"><div style="width:14px;height:14px;border-radius:3px;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;color:#085041;flex-shrink:0;">✓</div><div><div style="font-size:12px;color:var(--text);">${v.french}</div><div style="font-size:10px;color:var(--text3);">${v.japanese}</div></div></div>`).join(''):'<div style="font-size:11px;color:var(--text3);padding:5px 0 8px;">勾选词条后显示</div>';
+  }
+};
+
+window.addEventListener('resize',initMobile);
+initMobile();
+updateMobileTaskBadge();
 </script>
 </body>
 </html>
