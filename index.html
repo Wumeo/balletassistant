@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ballet Dictionary</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#FAFAF8;--bg2:#F2F1EE;--bg3:#E8E6E1;
+  --text:#1A1A18;--text2:#6B6B68;--text3:#9E9E9A;
+  --border:#E0DED8;--border2:#C8C6C0;
+  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-dark:#534AB7;
+  --green:#1D9E75;--green-light:#E1F5EE;
+  --red:#D85A30;--red-light:#FAECE7;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;align-items:flex-end;padding:0 0 0 180px;border-bottom:1px solid var(--border);background:var(--bg);}
+.tab{padding:10px 22px 9px;font-size:13px;color:var(--text2);cursor:pointer;border:1px solid transparent;border-bottom:none;border-radius:5px 5px 0 0;margin-right:3px;position:relative;bottom:-1px;background:var(--bg2);transition:all 0.12s;user-select:none;}
+.tab:hover{color:var(--text);background:var(--bg);}
+.tab.active{color:var(--text);font-weight:500;background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg);}
+
+.tab-content{display:none;padding:1.25rem 0;}
+.tab-content.active{display:block;}
+.two-col{display:flex;}
+.left-col{width:180px;flex-shrink:0;border-right:1px solid var(--border);}
+.right-col{flex:1;min-width:0;padding-left:1.5rem;}
+
+/* ── Task sidebar ── */
+.task-sec-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;user-select:none;}
+.task-sec-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.task-sec-arrow{font-size:9px;color:var(--text3);transition:transform .2s;}
+.task-sec-arrow.open{transform:rotate(180deg);}
+.task-sec-body{overflow:hidden;transition:max-height .2s ease;}
+.task-sec-body.closed{max-height:0!important;}
+.task-add-row{padding:4px 10px 6px;}
+.task-add-input{width:100%;font-size:12px;border:none;border-bottom:1px solid var(--border);background:transparent;color:var(--text);outline:none;padding:2px 0;display:none;font-family:inherit;}
+.task-add-input.visible{display:block;}
+.task-list{padding:0 10px 4px;}
+.task-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);}
+.task-item:last-child{border-bottom:none;}
+.task-cb{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .12s;}
+.task-cb:hover{border-color:var(--purple);}
+.task-cb.done{background:var(--purple);border-color:var(--purple);}
+.task-cb.done::after{content:"✓";font-size:9px;color:#fff;}
+.task-text{font-size:12px;color:var(--text);line-height:1.4;}
+.task-text.done{color:var(--text3);text-decoration:line-through;}
+.task-empty{font-size:11px;color:var(--text3);padding:4px 0 8px;}
+.task-resolved-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 4px;border-top:1px solid var(--border);cursor:pointer;user-select:none;margin-top:4px;}
+.task-resolved-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;}
+.task-resolved-arrow{font-size:9px;color:var(--text3);transition:transform .2s;}
+.task-resolved-arrow.open{transform:rotate(180deg);}
+.task-resolved-body{overflow:hidden;transition:max-height .2s ease;}
+.task-resolved-body.closed{max-height:0!important;}
+.task-resolved-list{padding:0 10px 6px;}
+
+/* ── Calendar ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.cal-nav-btn{width:26px;height:26px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.cal-nav-btn:hover{background:var(--bg2);}
+.cal-months{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.25rem;}
+.cal-month-title{font-size:12px;font-weight:500;color:var(--text);text-align:center;margin-bottom:8px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-dow{font-size:10px;color:var(--text3);text-align:center;padding:3px 0;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text2);cursor:pointer;border-radius:50%;transition:background .12s;position:relative;}
+.cal-day:hover{background:var(--bg2);}
+.cal-day.empty{cursor:default;pointer-events:none;}
+.cal-day.today{color:var(--purple-dark);font-weight:600;}
+.cal-day.marked{background:var(--purple);color:#fff;}
+.cal-day.marked:hover{background:var(--purple-dark);}
+.cal-day.has-note::after{content:"";width:3px;height:3px;border-radius:50%;background:var(--green);position:absolute;bottom:2px;left:50%;transform:translateX(-50%);}
+.cal-day.marked.has-note::after{background:rgba(255,255,255,.8);}
+
+/* ── Stats ── */
+.month-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem;}
+.stat-card{background:var(--bg2);border-radius:var(--radius);padding:10px 8px;text-align:center;}
+.stat-num{font-size:20px;font-weight:500;color:var(--text);}
+.stat-label{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* ── Note list ── */
+.notes-section-title{font-size:11px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;}
+.note-list{display:flex;flex-direction:column;gap:6px;}
+.note-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 14px;cursor:pointer;transition:border-color .15s;}
+.note-card:hover{border-color:var(--border2);}
+.note-date-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.note-date{font-size:12px;font-weight:500;color:var(--text);}
+.note-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;}
+.note-field{margin-bottom:2px;}
+.note-field-label{font-size:10px;color:var(--text3);}
+.note-field-text{font-size:12px;color:var(--text2);margin-left:4px;line-height:1.5;}
+.note-empty{text-align:center;padding:2rem 0;color:var(--text3);font-size:12px;}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .18s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;width:460px;max-width:92vw;transform:translateY(8px);transition:transform .18s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+.modal-title{font-size:15px;font-weight:500;color:var(--text);}
+.modal-close{width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);border-radius:var(--radius);font-size:15px;}
+.modal-close:hover{background:var(--bg2);}
+.field-label{font-size:11px;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;margin-top:12px;}
+.field-label:first-of-type{margin-top:0;}
+textarea{width:100%;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;line-height:1.6;padding:7px 10px;resize:vertical;}
+textarea:focus{outline:none;border-color:var(--purple);}
+.modal-footer{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;}
+.btn-delete{background:transparent;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:6px 0;font-family:inherit;}
+.btn-delete:hover{text-decoration:underline;}
+.modal-footer-right{display:flex;gap:8px;}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text2);padding:6px 16px;border-radius:var(--radius);font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-cancel:hover{background:var(--bg2);}
+.btn-save{background:var(--purple);border:none;color:#fff;padding:6px 16px;border-radius:var(--radius);font-size:13px;cursor:pointer;font-weight:500;font-family:inherit;}
+.btn-save:hover{background:var(--purple-dark);}
+
+/* ── Vocab sidebar ── */
+.vocab-sidebar{width:180px;flex-shrink:0;border-right:1px solid var(--border);overflow:hidden;transition:width .2s;position:relative;}
+.vocab-sidebar.collapsed{width:32px;}
+.sb-toggle{position:absolute;top:10px;right:6px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--text3);border-radius:var(--radius);z-index:2;}
+.sb-toggle:hover{background:var(--bg2);}
+.sb-inner{padding:10px 8px 10px 10px;width:180px;}
+.vocab-sidebar.collapsed .sb-inner{display:none;}
+.collapsed-label{display:none;writing-mode:vertical-rl;font-size:11px;color:var(--text3);position:absolute;top:38px;left:50%;transform:translateX(-50%);white-space:nowrap;letter-spacing:.05em;}
+.vocab-sidebar.collapsed .collapsed-label{display:block;}
+.sec-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:3px 0;margin-bottom:4px;user-select:none;}
+.sec-title{font-size:11px;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;}
+.sec-arrow{font-size:9px;color:var(--text3);transition:transform .2s;}
+.sec-arrow.open{transform:rotate(180deg);}
+.sec-body{overflow:hidden;transition:max-height .2s ease;}
+.sec-body.closed{max-height:0!important;}
+.sb-empty{font-size:11px;color:var(--text3);line-height:1.5;padding:5px 0 8px;}
+.sb-item{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);}
+.sb-item:last-child{border-bottom:none;}
+.sb-check{width:13px;height:13px;border-radius:3px;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;color:#085041;}
+.sb-name{font-size:11px;color:var(--text);}
+.sb-sub{font-size:10px;color:var(--text3);}
+.sb-progress{margin-top:14px;padding-top:10px;border-top:1px solid var(--border);}
+.prog-label{font-size:11px;color:var(--text3);margin-bottom:5px;}
+.prog-bg{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s;}
+.prog-count{font-size:11px;color:var(--text2);margin-top:4px;}
+
+/* ── Vocab main ── */
+.search-row{display:flex;gap:8px;margin-bottom:.75rem;}
+.search-row input{flex:1;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;}
+.search-row input:focus{border-color:var(--purple);}
+.vocab-type-tabs{display:flex;gap:4px;margin-bottom:.75rem;}
+.vtype-tab{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .12s;font-family:inherit;}
+.vtype-tab:hover{background:var(--bg2);}
+.vtype-tab.active{background:var(--purple-light);border-color:#AFA9EC;color:var(--purple-dark);}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;align-items:center;}
+.filter-group{display:flex;gap:4px;flex-wrap:wrap;}
+.tag{font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;transition:all .12s;font-family:inherit;}
+.tag:hover{background:var(--bg2);}
+.tag.active{background:var(--purple-light);border-color:#AFA9EC;color:var(--purple-dark);}
+.vdivider{width:1px;background:var(--border);margin:0 3px;align-self:stretch;}
+.results-count{font-size:12px;color:var(--text2);margin-bottom:.75rem;}
+.vocab-section-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.vocab-section-label span.count{font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:8px;color:var(--text3);font-weight:400;letter-spacing:0;}
+.vocab-section+.vocab-section{margin-top:1.5rem;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;}
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.9rem 1.1rem;transition:border-color .12s;}
+.card:hover{border-color:var(--border2);}
+.card.expanded{border-color:#AFA9EC;}
+.card.learned{border-color:var(--green);}
+.card.concept-card{border-left:3px solid #AFA9EC;}
+.card.concept-card.learned{border-left-color:var(--green);}
+.card-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;}
+.checkbox{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all .12s;background:var(--bg);}
+.checkbox:hover{border-color:var(--green);}
+.checkbox.checked{background:var(--green);border-color:var(--green);}
+.checkbox.checked::after{content:"✓";font-size:10px;color:#fff;font-weight:500;}
+.card-title{flex:1;min-width:0;cursor:pointer;}
+.french-name{font-size:14px;font-weight:500;color:var(--text);}
+.japanese-name{font-size:11px;color:var(--text2);margin-top:1px;}
+.chinese-name{font-size:10px;color:var(--text3);margin-top:1px;}
+.purpose-badge{font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;}
+.purpose-独立{background:var(--green-light);color:#085041;}
+.purpose-过渡{background:var(--red-light);color:#4A1B0C;}
+.purpose-兼用{background:var(--purple-light);color:#26215C;}
+.concept-type-badge{font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;background:var(--purple-light);color:#26215C;}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px;}
+.mini-tag{font-size:10px;padding:2px 6px;border-radius:7px;background:var(--bg2);color:var(--text2);}
+.card-preview{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}
+.card-detail{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;display:none;}
+.card.expanded .card-detail{display:block;}
+.detail-section{margin-bottom:9px;}
+.detail-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.detail-list{list-style:none;}
+.detail-list li{font-size:12px;color:var(--text);line-height:1.6;padding-left:10px;position:relative;}
+.detail-list li::before{content:"·";position:absolute;left:0;color:var(--text3);}
+.combo-item{font-size:11px;padding:3px 7px;background:var(--bg2);border-radius:var(--radius);margin-bottom:3px;color:var(--text2);}
+.related-item{font-size:11px;padding:2px 7px;background:var(--purple-light);color:var(--purple-dark);border-radius:var(--radius);margin-right:4px;margin-bottom:3px;display:inline-block;cursor:pointer;}
+.related-item:hover{background:#CECBF6;}
+.expand-hint{font-size:11px;color:var(--text3);margin-top:7px;cursor:pointer;}
+.vempty{text-align:center;padding:2rem 0;color:var(--text2);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('notes')">课堂记录</div>
+  <div class="tab" onclick="switchTab('vocab')">词汇库</div>
+</div>
+
+<!-- 课堂记录 -->
+<div class="tab-content active" id="tab-notes">
+  <div class="two-col">
+    <div class="left-col">
+      <div class="task-sec-header" onclick="toggleTaskSec()">
+        <span class="task-sec-title">近期课题</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span onclick="event.stopPropagation();showAddInput()" style="width:18px;height:18px;border-radius:4px;border:1px dashed var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);cursor:pointer;line-height:1">+</span>
+          <span class="task-sec-arrow open" id="task-sec-arrow">▼</span>
+        </div>
+      </div>
+      <div class="task-sec-body" id="task-sec-body">
+        <div class="task-add-row"><input class="task-add-input" id="task-add-input" placeholder="输入课题后按回车" onkeydown="handleAddTask(event)"/></div>
+        <div class="task-list" id="task-list"><div class="task-empty">还没有课题</div></div>
+      </div>
+      <div class="task-resolved-header" onclick="toggleResolved()">
+        <span class="task-resolved-title">已解决课题</span>
+        <span class="task-resolved-arrow" id="resolved-arrow">▼</span>
+      </div>
+      <div class="task-resolved-body closed" id="resolved-body" style="max-height:0">
+        <div class="task-resolved-list" id="resolved-list"><div class="task-empty">暂无</div></div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="shiftMonths(-1)">◀</button>
+        <span style="font-size:12px;color:var(--text2)" id="cal-range"></span>
+        <button class="cal-nav-btn" onclick="shiftMonths(1)">▶</button>
+      </div>
+      <div class="cal-months" id="cal-months"></div>
+      <div class="month-stats">
+        <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">本月训练天数</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-notes">0</div><div class="stat-label">笔记条数</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">连续训练天数</div></div>
+      </div>
+      <div class="notes-section-title">训练笔记</div>
+      <div class="note-list" id="note-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 词汇库 -->
+<div class="tab-content" id="tab-vocab">
+  <div class="two-col">
+    <div class="vocab-sidebar" id="vocab-sidebar">
+      <div class="sb-toggle" onclick="toggleSidebar()">◀</div>
+      <div class="collapsed-label">已掌握</div>
+      <div class="sb-inner">
+        <div class="sec-header" onclick="toggleLearnedSec()">
+          <span class="sec-title">已掌握</span>
+          <span class="sec-arrow open" id="sec-arrow">▼</span>
+        </div>
+        <div class="sec-body" id="sec-body">
+          <div id="learned-list"><div class="sb-empty">勾选后显示</div></div>
+        </div>
+        <div class="sb-progress">
+          <div class="prog-label">学习进度</div>
+          <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+          <div class="prog-count" id="prog-count">0 / 0 个词条</div>
+        </div>
+      </div>
+    </div>
+    <div class="right-col">
+      <div class="search-row"><input type="text" id="search" placeholder="搜索法语、日语或中文名称..." oninput="renderVocab()"/></div>
+      <div class="vocab-type-tabs">
+        <span class="vtype-tab active" data-vtype="all" onclick="switchVType(this)">全部</span>
+        <span class="vtype-tab" data-vtype="action" onclick="switchVType(this)">动作</span>
+        <span class="vtype-tab" data-vtype="concept" onclick="switchVType(this)">概念</span>
+      </div>
+      <div class="filters" id="action-filters">
+        <div class="filter-group">
+          <span class="tag active" data-group="purpose" data-value="all" onclick="toggleFilter(this)">全部</span>
+          <span class="tag" data-group="purpose" data-value="独立" onclick="toggleFilter(this)">独立</span>
+          <span class="tag" data-group="purpose" data-value="过渡" onclick="toggleFilter(this)">过渡</span>
+          <span class="tag" data-group="purpose" data-value="兼用" onclick="toggleFilter(this)">兼用</span>
+        </div>
+        <div class="vdivider"></div>
+        <div class="filter-group">
+          <span class="tag active" data-group="body" data-value="all" onclick="toggleFilter(this)">全部部位</span>
+          <span class="tag" data-group="body" data-value="腿" onclick="toggleFilter(this)">腿</span>
+          <span class="tag" data-group="body" data-value="脚" onclick="toggleFilter(this)">脚</span>
+          <span class="tag" data-group="body" data-value="手臂" onclick="toggleFilter(this)">手臂</span>
+          <span class="tag" data-group="body" data-value="全身" onclick="toggleFilter(this)">全身</span>
+        </div>
+        <div class="vdivider"></div>
+        <div class="filter-group">
+          <span class="tag active" data-group="type" data-value="all" onclick="toggleFilter(this)">全部类型</span>
+          <span class="tag" data-group="type" data-value="跳" onclick="toggleFilter(this)">跳</span>
+          <span class="tag" data-group="type" data-value="转" onclick="toggleFilter(this)">转</span>
+          <span class="tag" data-group="type" data-value="伸展" onclick="toggleFilter(this)">伸展</span>
+          <span class="tag" data-group="type" data-value="移动" onclick="toggleFilter(this)">移动</span>
+          <span class="tag" data-group="type" data-value="平衡" onclick="toggleFilter(this)">平衡</span>
+        </div>
+      </div>
+      <div class="filters" id="concept-filters" style="display:none">
+        <div class="filter-group">
+          <span class="tag active" data-group="ctype" data-value="all" onclick="toggleFilter(this)">全部</span>
+          <span class="tag" data-group="ctype" data-value="足部位置" onclick="toggleFilter(this)">足部位置</span>
+          <span class="tag" data-group="ctype" data-value="方向" onclick="toggleFilter(this)">方向</span>
+          <span class="tag" data-group="ctype" data-value="旋转方向" onclick="toggleFilter(this)">旋转方向</span>
+          <span class="tag" data-group="ctype" data-value="身体朝向" onclick="toggleFilter(this)">身体朝向</span>
+          <span class="tag" data-group="ctype" data-value="手臂形态" onclick="toggleFilter(this)">手臂形态</span>
+          <span class="tag" data-group="ctype" data-value="其他概念" onclick="toggleFilter(this)">其他概念</span>
+        </div>
+      </div>
+      <div class="results-count" id="results-count"></div>
+      <div id="vocab-output"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="field-label">今天上了什么课</div>
+    <textarea id="field-class" rows="2" placeholder="例：Otona Ballet 初级班"></textarea>
+    <div class="field-label">吸收到的新内容</div>
+    <textarea id="field-new" rows="3" placeholder="例：第一次接触 glissade..."></textarea>
+    <div class="field-label">进步的地方</div>
+    <textarea id="field-progress" rows="2" placeholder="例：pirouette 今天能稳定转一圈了"></textarea>
+    <div class="field-label">需要改进的地方</div>
+    <textarea id="field-improve" rows="2" placeholder="例：arabesque 支撑腿还不够稳"></textarea>
+    <div class="modal-footer">
+      <button class="btn-delete" id="btn-delete" onclick="deleteNote()" style="visibility:hidden">删除记录</button>
+      <div class="modal-footer-right">
+        <button class="btn-cancel" onclick="closeModal()">取消</button>
+        <button class="btn-save" onclick="saveNote()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const FIELDS=[{key:'cls',label:'课程'},{key:'newContent',label:'新内容'},{key:'progress',label:'进步'},{key:'improve',label:'待改进'}];
+const today=new Date(),todayKey=dateKey(today);
+let baseMonth=new Date(today.getFullYear(),today.getMonth(),1);
+
+// ── localStorage helpers ──
+function loadLS(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch{return def;}}
+function saveLS(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
+
+let notes=loadLS('ballet_notes',{});
+let tasks=loadLS('ballet_tasks',[]);
+let learnedArr=loadLS('ballet_learned',[]);
+let learned=new Set(learnedArr);
+let nextTaskId=loadLS('ballet_next_task_id',1);
+
+let vExpanded=null,vFilters={purpose:'all',body:'all',type:'all',ctype:'all'};
+let currentVType='all',learnedSecOpen=true,taskSecOpen=true,resolvedOpen=false,editingDate=null;
+
+function persist(){
+  saveLS('ballet_notes',notes);
+  saveLS('ballet_tasks',tasks);
+  saveLS('ballet_learned',[...learned]);
+  saveLS('ballet_next_task_id',nextTaskId);
+}
+
+// ── DATA ──
+const actions=[
+  {french:'Plié',japanese:'プリエ',chinese:'屈膝',purpose:'独立',body:'腿',type:'伸展',preview:'膝盖沿脚尖方向弯曲，分为demi-plié和grand plié',points:['膝盖朝向小脚趾方向弯曲','重心保持在两脚正中','Demi-plié脚跟不离地','Grand plié除二位外脚跟均短暂离地','核心收紧，骨盆保持中立'],combos:['Demi-plié（半蹲）','Grand plié（全蹲）','Plié en tournant'],related:['Relevé','Fondu','Turnout']},
+  {french:'Relevé',japanese:'ルルヴェ',chinese:'提踵',purpose:'独立',body:'脚',type:'平衡',preview:'从全脚掌站立提起脚跟，上升至demi-pointe或pointe',points:['上升时脚趾均匀推地','膝盖伸直，大腿内侧上提','下落时控制速度，脚跟轻柔落地','保持外开和核心稳定'],combos:['Relevé en première','Relevé en cinquième','Double relevé'],related:['Plié','Demi-pointe','Sous-sus']},
+  {french:'Tendu',japanese:'タンデュ',chinese:'伸展',purpose:'独立',body:'脚',type:'伸展',preview:'动作腿沿地面向外伸展，脚尖保持接触地面直至完全绷直',points:['从五位出发，脚跟先离地','脚背充分伸展，脚尖指向地面','回收时脚尖先着地，脚跟最后归位','支撑腿膝盖伸直，外开保持'],combos:['Tendu devant/derrière/à la seconde','Tendu en croix','Tendu jeté（dégagé）'],related:['Dégagé','En croix']},
+  {french:'Dégagé',japanese:'デガジェ',chinese:'脱离',purpose:'独立',body:'腿',type:'伸展',preview:'动作腿快速伸出后脚尖离地约45度，比Tendu更有速度和能量',points:['动作比Tendu更快速有力','脚尖离地约45度','保持外开，膝盖向外','回收与伸出同样迅速'],combos:['Dégagé devant/derrière/à la seconde','Dégagé en croix','Dégagé en cloche'],related:['Tendu','Grand battement'],note:'也称Battement jeté或Battement dégagé'},
+  {french:'Rond de jambe',japanese:'ロン・ドゥ・ジャンブ',chinese:'腿部画圆',purpose:'独立',body:'腿',type:'移动',preview:'动作腿在地面或空中画半圆形轨迹',points:["Par terre：脚尖始终贴地画圆","En l'air：腿抬起在空中画圆","En dehors：向外画圆（经前方到后方）","En dedans：向内画圆（经后方到前方）","髋部保持稳定不随腿转动"],combos:["Rond de jambe par terre","Rond de jambe en l'air","En dehors / En dedans","Grand rond de jambe"],related:["En dehors","En dedans","Par terre","En l'air"]},
+  {french:'Fondu',japanese:'フォンデュ',chinese:'融化/下沉',purpose:'独立',body:'腿',type:'伸展',preview:'支撑腿屈膝同时动作腿收至cou-de-pied，再同时伸展双腿',points:['双腿同时屈伸，动作要协调统一','支撑腿做demi-plié','动作腿从cou-de-pied伸展至所需高度','动作如融化般柔和流畅','不要先屈后伸，要同时进行'],combos:['Fondu devant/derrière/à la seconde','Fondu relevé','Fondu développé'],related:['Plié','Cou-de-pied','Développé']},
+  {french:'Frappé',japanese:'フラッペ',chinese:'击打',purpose:'独立',body:'脚',type:'伸展',preview:'动作脚从cou-de-pied出发，以击打动作迅速伸展，强调速度和力量',points:['从sur le cou-de-pied出发','脚以击打方式迅速向外伸展','落点为demi-pointe','回收同样迅速有力','支撑腿保持稳定'],combos:['Frappé devant/derrière/à la seconde','Double frappé','Frappé en cloche'],related:['Cou-de-pied','Petit battement']},
+  {french:'Petit battement',japanese:'プティ・バットマン',chinese:'小击打',purpose:'独立',body:'脚',type:'伸展',preview:'动作脚在sur le cou-de-pied位置前后快速交替，训练脚踝灵活性',points:['动作腿在cou-de-pied处快速前后交替','大腿和膝盖保持静止','只有小腿以下运动','动作尽量小而快速','保持外开'],combos:['Petit battement serré','Petit battement en cloche'],related:['Cou-de-pied','Frappé']},
+  {french:'Développé',japanese:'デヴェロッペ',chinese:'展开',purpose:'独立',body:'腿',type:'平衡',preview:'动作腿经retiré缓慢展开至高位，强调控制力和柔韧性',points:['动作腿先收至retiré','再从retiré缓慢展开至目标方向','展开过程中膝盖朝外','到达最高点后保持姿态','髋部尽量保持水平'],combos:['Développé devant/derrière/à la seconde','Développé en arabesque','Développé écarté/croisé'],related:['Retiré','Arabesque','Adage']},
+  {french:'Grand battement',japanese:'グラン・バットマン',chinese:'大踢腿',purpose:'独立',body:'腿',type:'伸展',preview:'动作腿以最大幅度用力向上踢出，保持膝盖伸直，再控制落下',points:['用力踢出，动作腿膝盖完全伸直','脚背充分绷直','踢出时髋部保持稳定不歪斜','落下时控制速度，经tendu归位','支撑腿始终伸直'],combos:['Grand battement devant/derrière/à la seconde','Grand battement en croix','Grand battement en cloche','Grand battement jeté'],related:['Dégagé','En croix']},
+  {french:'Battement',japanese:'バットマン',chinese:'击打/踢',purpose:'独立',body:'腿',type:'伸展',preview:'腿部踢出动作的总称，根据大小和方式分为多个变形',points:['动作腿从五位踢出','保持外开','根据种类有不同的高度和速度要求'],combos:['Petit battement','Grand battement','Battement tendu','Battement frappé','Battement fondu'],related:['Grand battement','Petit battement','Tendu'],note:'Battement是总称，具体动作需加修饰语'},
+  {french:'Adage',japanese:'アダージョ',chinese:'慢板',purpose:'独立',body:'全身',type:'平衡',preview:'缓慢、控制性强的动作组合，训练平衡和优雅',points:['所有动作缓慢而有控制','注重身体延伸和线条','重心转移要稳定','手臂配合动作流畅移动','呼吸与动作配合'],combos:['包含Développé、Arabesque、Attitude的组合'],related:['Développé','Arabesque','Attitude','Port de bras'],note:'Adage是速度和风格的描述，不是单一动作'},
+  {french:'Arabesque',japanese:'アラベスク',chinese:'阿拉贝斯克',purpose:'兼用',body:'全身',type:'平衡',preview:'单脚支撑，后腿向后伸展抬高，手臂展开的造型动作',points:['支撑腿完全伸直','后腿尽量抬高，膝盖伸直脚背绷紧','躯干保持延伸，避免塌腰','手臂根据编号有不同位置','视线方向跟随手臂'],combos:['Arabesque 1/2/3/4','Arabesque penchée','Arabesque en pointe'],related:['Attitude','Développé','Penché'],note:'各流派对四种arabesque手臂位置定义略有不同'},
+  {french:'Attitude',japanese:'アティチュード',chinese:'姿态',purpose:'兼用',body:'全身',type:'平衡',preview:'单脚支撑，动作腿弯曲抬起呈约90度角的造型动作',points:['支撑腿伸直站稳','动作腿膝盖弯曲，大腿抬起','膝盖高于脚','手臂与腿的方向配合','背部保持延伸'],combos:["Attitude devant/derrière","Attitude croisée/effacée"],related:['Arabesque','Développé']},
+  {french:'Sauté',japanese:'ソテ',chinese:'跳跃',purpose:'独立',body:'腿',type:'跳',preview:'在某个脚位原地跳起后回到同一脚位的基础跳跃',points:['起跳前做demi-plié准备','双脚推地跳起','空中绷脚，腿伸直','落地时脚尖先着地，经demi-plié缓冲','落地脚位与起跳相同'],combos:['Sauté en première/deuxième/cinquième'],related:['Changement','Soubresaut','Plié']},
+  {french:'Sauté Fouetté',japanese:'ソテ・フェッテ',chinese:'跳跃翻转',purpose:'独立',body:'全身',type:'跳',preview:'支撑腿推地跳起，在腾空的瞬间身体在空中改变方向（通常是180°），最后以另一舞姿落地',points:['起跳高度保证有足够的空中停留时间（Ballon）来完成翻转','在翻转瞬间，脊柱必须垂直，避免在空中晃动','利用动力腿向侧面的扫动力量来带动髋部转动','快速留头甩头，以保持平衡并精准定位落地方向'],combos:['Petit Sauté Fouetté：小跳中的翻转，通常从一位或五位起跳','Grand Sauté Fouetté：大跳中的翻转，通常结合Grand Battement出现'],related:['Sauté','Fouetté','Grand battement']},
+  {french:'Changement',japanese:'シャンジュマン',chinese:'换脚跳',purpose:'独立',body:'腿',type:'跳',preview:'从五位跳起，空中双脚前后交换位置后落下',points:['从五位demi-plié起跳','空中双脚迅速交换','落地时后脚变前脚','落地经demi-plié缓冲','始终保持外开'],combos:['Petit/Grand changement','Changement battu'],related:['Sauté','Entrechat','Soubresaut']},
+  {french:'Échappé',japanese:'エシャッペ',chinese:'逃脱',purpose:'独立',body:'腿',type:'跳',preview:'从五位跳起，双脚向外展开至二位或四位后再合回',points:['从五位起跳','空中双脚向外打开','落地时落于二位或四位','可接着再跳回五位','保持外开和核心稳定'],combos:['Échappé à la seconde','Échappé en quatrième','Échappé relevé'],related:['Sauté','Assemblé']},
+  {french:'Assemblé',japanese:'アッサンブレ',chinese:'组合/汇聚',purpose:'独立',body:'腿',type:'跳',preview:'一脚推地跳起，动作腿在空中与支撑腿汇合，双脚同时落地于五位',points:['动作腿先向目标方向伸展','支撑腿用力推地跳起','两腿在空中汇合伸直','双脚同时落于五位','落地经plié缓冲'],combos:['Assemblé devant/derrière/à la seconde','Assemblé en tournant','Grand assemblé','Assemblé battu'],related:['Jeté','Glissade']},
+  {french:'Jeté',japanese:'ジュテ',chinese:'投出/踢跳',purpose:'兼用',body:'腿',type:'跳',preview:'一脚踢出后跳起，重心转移至另一脚的跳跃动作总称',points:['一脚踢出做动力','支撑腿跳起','重心转移至踢出的脚上落地','落地经plié缓冲','根据大小和方向有多种变形'],combos:['Petit jeté','Grand jeté','Jeté en tournant','Jeté battu','Pas jeté','Jeté entrelacé'],related:['Glissade','Assemblé','Grand jeté'],note:'Jeté是总称'},
+  {french:'Grand jeté',japanese:'グラン・ジュテ',chinese:'大跳',purpose:'独立',body:'腿',type:'跳',preview:'向前大幅度腾空跳跃，两腿在空中呈分叉状',points:['起跳腿有力蹬地','前腿向前大力踢出','腾空时两腿尽量成180度展开','躯干保持挺拔，手臂配合打开','落地时前脚脚尖先着地，膝盖弯曲缓冲'],combos:['Grand jeté en arabesque','Grand jeté en tournant','Grand jeté en attitude'],related:['Glissade','Chassé','Jeté']},
+  {french:'Jeté entrelacé (Tour Jeté)',japanese:'ジュテ・アントルラセ',chinese:'剪刀式跳跃',purpose:'独立',body:'全身',type:'跳',preview:'动力腿向前踢起后身体在空中做180°翻转，双腿像剪刀交错，落地成Arabesque姿态',points:['第一条腿踢起的高度决定了跳跃的上限，踢腿必须有力','在跳跃的最高点完成身体翻转和换腿','躯干保持挺拔，落地时后腿迅速拉伸成漂亮的Arabesque线条'],combos:['常接在Chassé或Grand Pas de Chat之后','落地后可接Tombé Pas de Bourrée'],related:['Grand jeté','Chassé','Arabesque']},
+  {french:'Pas de chat',japanese:'パ・ドゥ・シャ',chinese:'猫步跳',purpose:'独立',body:'腿',type:'跳',preview:'模仿猫跳跃姿态，双脚依次收至retiré后依次落地',points:['一脚先收至retiré','随即另一脚也收至retiré','两腿依次在空中呈retiré','依次落地，脚尖先着地','轻盈如猫'],combos:['Petit/Grand pas de chat','Pas de chat en tournant'],related:['Retiré','Glissade']},
+  {french:'Sissonne',japanese:'シソンヌ',chinese:'剪刀跳',purpose:'独立',body:'腿',type:'跳',preview:'双脚起跳，一脚落地，另一脚在空中伸展后落下或保持姿态',points:['双脚同时起跳','空中一脚伸展至目标方向','支撑脚先落地','动作腿根据类型或落下或保持','落地经plié缓冲'],combos:['Sissonne simple/ouverte/fermée','Sissonne en arabesque','Grand sissonne'],related:['Assemblé','Jeté']},
+  {french:'Cabriole',japanese:'カブリオール',chinese:'击腿跳',purpose:'独立',body:'腿',type:'跳',preview:'一腿踢出后另一腿击打其小腿的高难度跳跃',points:['一腿先踢出至高位','支撑腿跳起追赶','后腿击打前腿小腿','两腿在空中击打后分开','踢出腿先落地'],combos:['Cabriole devant/derrière','Cabriole en arabesque','Demi-cabriole'],related:['Grand battement','Jeté']},
+  {french:'Entrechat',japanese:'アントルシャ',chinese:'编织跳',purpose:'独立',body:'腿',type:'跳',preview:'跳起后双腿快速交叉换位，以交叉次数命名',points:['从五位起跳','空中双腿快速交叉','次数决定命名','落地回到五位','需要快速的脚踝和小腿动作'],combos:['Entrechat trois/quatre/six','Entrechat royale'],related:['Changement','Batterie'],note:'偶数落双脚，奇数落单脚'},
+  {french:'Brisé',japanese:'ブリゼ',chinese:'破碎跳',purpose:'兼用',body:'腿',type:'跳',preview:'带有击打动作的小跳跃，向前或向后移动',points:['一脚向前或后伸展','跳起同时另一脚追上击打，向前脚位置位移','双脚在空中相击','落于五位','是batterie动作之一'],combos:['Brisé devant/derrière','Brisé volé（飞行版）'],related:['Assemblé battu','Entrechat']},
+  {french:'Temps levé',japanese:'タン・ルヴェ',chinese:'单脚跳',purpose:'过渡',body:'腿',type:'跳',preview:'单脚起跳后落回同一脚的小跳，常用于连接和组合',points:['单脚起跳','空中动作腿保持位置','落回同一脚','落地经plié缓冲','常与其他动作组合使用'],combos:['Temps levé en arabesque','Temps levé retiré'],related:['Chassé','Pas de bourrée']},
+  {french:'Saut de basque',japanese:'ソー・ドゥ・バスク',chinese:'巴斯克跳',purpose:'独立',body:'全身',type:'跳',preview:'转体跳跃，一腿踢出后转体，另一腿收至retiré',points:['一腿向侧面踢出','跳起同时转体','另一腿收至retiré','落地于单脚','需要转体和跳跃的协调配合'],combos:['Saut de basque en tournant'],related:['Grand jeté en tournant','Retiré']},
+  {french:'Pirouette',japanese:'ピルエット',chinese:'旋转',purpose:'独立',body:'全身',type:'转',preview:'单脚支撑原地旋转，是芭蕾中最核心的旋转技术',points:['起转时推力来自后腿蹬地','支撑脚立于demi-pointe或pointe','动作腿保持retiré','视线固定一点（spotting）防止头晕','核心收紧，手臂收拢至一位'],combos:['Pirouette en dehors/en dedans','Double pirouette','Pirouette en attitude/en arabesque'],related:['Retiré','En dehors','En dedans','Spotting']},
+  {french:'Piqué turn',japanese:'ピケ・ターン',chinese:'刺步转',purpose:'兼用',body:'全身',type:'转',preview:'向前迈步刺地后立即在demi-pointe上旋转，常连续进行',points:['工作腿向前刺地至demi-pointe','另一腿迅速收至retiré','在demi-pointe上旋转','落地后重复','视线spotting保持方向'],combos:['Piqué turn en dehors/en dedans','连续piqué turns（沿对角线或圆形）'],related:['Pirouette','Retiré','Chaîné']},
+  {french:'Chaîné',japanese:'シェネ',chinese:'链式转（平转）',purpose:'过渡',body:'全身',type:'转',preview:'连续快速的半圈旋转移动，两脚交替落地',points:['两脚快速交替','每步转半圈','在demi-pointe上进行','视线spotting','手臂收拢保持平衡'],combos:['Chaîné turns','配合Déboulés'],related:['Pirouette','Piqué turn'],note:'也写作Chaînés déboulés'},
+  {french:'Fouetté',japanese:'フェッテ',chinese:'鞭打转',purpose:'独立',body:'全身',type:'转',preview:'支撑腿旋转，动作腿向外鞭打后收回retiré提供转动力量',points:['支撑腿保持demi-pointe旋转','动作腿向外甩出至à la seconde','再收回retiré提供动力','每圈重复鞭打动作','视线spotting不能丢'],combos:['32 fouettés（天鹅湖经典）','Fouetté en tournant','Grand fouetté'],related:['Pirouette','Retiré','En dehors'],note:'连续32个fouetté是芭蕾技术的标志性挑战'},
+  {french:'Italian Fouetté',japanese:'イタリアン・フェッテ',chinese:'意大利挥鞭转',purpose:'独立',body:'全身',type:'转',preview:'动力腿向侧面大幅度踢起后身体迅速翻转，动力腿顺势变为Attitude或Arabesque姿态',points:['强调"甩"的力量，利用动力腿向侧面踢出的惯性带动身体翻转','翻转瞬间，躯干要保持极强的核心控制，避免晃动','手臂通常从二位或三位配合身体翻转迅速切换到另一侧'],combos:[],related:['Fouetté','Arabesque','Attitude']},
+  {french:"Tour en l'air",japanese:'トゥール・アン・レール',chinese:'空中转',purpose:'独立',body:'全身',type:'转',preview:'跳起后在空中完成旋转，传统上为男性动作，转一至三圈',points:['从五位demi-plié有力跳起','空中身体完成旋转','手臂收拢增加转速','落地时回到五位','视线spotting'],combos:["Single/Double/Triple tour en l'air"],related:['Pirouette','Assemblé'],note:'传统上为男性动作，现代芭蕾中女性也会练习'},
+  {french:'Renversé',japanese:'ランヴェルセ',chinese:'倒转',purpose:'独立',body:'全身',type:'转',preview:'旋转中身体向后倾斜弯曲，形成弧线，结合转体与cambré',points:['在旋转中身体向旁侧和后方倾斜','腰部形成弧线','动作腿经retiré转至后方','整体动作流畅连贯','需要良好的平衡和柔韧性'],combos:['Renversé en dehors/en dedans'],related:['Pirouette','Cambré','Attitude']},
+  {french:'Soutenu',japanese:'ソトゥニュ',chinese:'支撑转',purpose:'过渡',body:'全身',type:'转',preview:'双脚并拢在pointe或demi-pointe上旋转的动作',points:['双脚并拢于五位','提至demi-pointe或pointe','完成旋转','落回五位','也常作为短语的修饰词'],combos:['Soutenu en tournant','Soutenu en pointe'],related:['Relevé','Pirouette'],note:"Soutenu作为形容词也表示'有支撑的'"},
+  {french:'Glissade',japanese:'グリッサード',chinese:'滑步',purpose:'过渡',body:'腿',type:'移动',preview:'两脚交替滑行移动，常用于跳跃前的准备步骤',points:['从五位开始，一脚向侧面伸展','重心转移，另一脚跟进合并','全程保持腿部伸直','动作流畅如滑行','可向前、向后、向侧面执行'],combos:['Glissade devant/derrière/à la seconde'],related:['Grand jeté','Assemblé','Pas de chat'],note:'最常见的跳跃准备步伐'},
+  {french:'Pas de bourrée',japanese:'パ・ドゥ・ブーレ',chinese:'布雷步',purpose:'过渡',body:'脚',type:'移动',preview:'三步交替的小碎步，常用于换脚和方向转换',points:['三个步骤依次完成','在demi-pointe上轻盈执行','膝盖保持微微弯曲','动作柔和流畅','多种方向和变形'],combos:['Pas de bourrée dessus/dessous','Pas de bourrée en avant/en arrière','Pas de bourrée couru','Pas de bourrée en tournant'],related:['Pirouette','Grand battement']},
+  {french:'Chassé',japanese:'シャッセ',chinese:'追步',purpose:'过渡',body:'腿',type:'移动',preview:'一脚滑出后另一脚追上将其推出的移动步伐',points:['一脚向目标方向伸出','另一脚追上并将其取代','被追的脚继续移动或进入下一动作','动作流畅有前进感','常用作跳跃的起跑步骤'],combos:['Chassé en avant/en arrière/à la seconde'],related:['Grand jeté','Glissade']},
+  {french:'Tombé',japanese:'トンベ',chinese:'跌落',purpose:'过渡',body:'全身',type:'移动',preview:"重心向前或向侧转移，像'跌落'到另一脚，常用于连接",points:["工作腿向目标方向伸展","重心顺势'跌落'转移至工作腿","原支撑腿自然跟随","动作有重力感和流动性","常接pirouette或跳跃"],combos:['Tombé en avant/de côté','Tombé → Pirouette'],related:['Pas de bourrée','Pirouette']},
+  {french:'Balancé',japanese:'バランセ',chinese:'摇摆步',purpose:'过渡',body:'全身',type:'移动',preview:'三拍节奏的摇摆步伐，具有华尔兹风格',points:['第一拍向侧迈步','第二拍另一脚交叉于后并提至demi-pointe','第三拍原脚落回','身体随节奏自然摇摆','手臂柔和配合'],combos:['Balancé de côté','Balancé en avant/en arrière'],related:['Pas de valse','Tombé'],note:'适合3/4拍音乐'},
+  {french:'Pas de valse',japanese:'パ・ドゥ・ヴァルス',chinese:'华尔兹步',purpose:'过渡',body:'全身',type:'移动',preview:'三拍节奏的华尔兹风格步伐，流畅地移动穿越空间',points:['三步完成一个组合','随音乐流畅移动','身体随步伐自然起伏','手臂配合动作延伸','适合3/4拍音乐'],combos:['Pas de valse en tournant'],related:['Balancé','Tombé']},
+  {french:'Couru',japanese:'クール',chinese:'跑步',purpose:'过渡',body:'脚',type:'移动',preview:'在demi-pointe或pointe上快速小步跑的移动方式',points:['双脚快速交替','步伐极小','在demi-pointe或pointe上进行','身体保持稳定','可向各方向移动'],combos:['Pas de bourrée couru','Couru en avant/en arrière'],related:['Pas de bourrée','Chaîné']},
+  {french:'Failli',japanese:'ファイイ',chinese:'错步',purpose:'过渡',body:'全身',type:'移动',preview:'从跳跃落地后身体快速穿越的步伐，常作为大跳前的连接',points:['从单脚落地','身体迅速穿越至另一方向','另一脚随即准备起跳','动作连贯迅速','常接Grand allegro'],combos:['Failli → Grand jeté','Failli → Assemblé'],related:['Glissade','Chassé']},
+  {french:'Contretemps',japanese:'コントルタン',chinese:'反拍步',purpose:'过渡',body:'全身',type:'移动',preview:'一种反拍节奏的连接步伐，包含plié和步伐的组合',points:['在反拍上起步','包含plié的预备','向前移动','常用于连接其他动作'],combos:['配合Grand allegro使用'],related:['Chassé','Tombé'],note:'节奏感强的连接步伐'},
+  {french:'Coupé',japanese:'クッペ',chinese:'切换',purpose:'过渡',body:'脚',type:'移动',preview:'一脚快速取代另一脚重心，常作为旋转或跳跃的起始',points:['一脚快速置于另一脚旁','将重心切换至新的脚','动作迅速干脆','常作为pirouette的准备','可在pointe或demi-pointe上完成'],combos:['Coupé dessus/dessous','Coupé → Pirouette','Coupé → Jeté'],related:['Tombé','Pirouette']},
+  {french:'Port de bras',japanese:'ポール・ドゥ・ブラ',chinese:'手臂运动',purpose:'独立',body:'手臂',type:'伸展',preview:'手臂从一个位置流畅移动到另一个位置，也指包含躯干运动的练习组合',points:['手臂运动从背部发力','手肘带动手腕，手腕带动手指','动作流畅连贯如水','肩膀保持放松下沉','手指自然延伸'],combos:['Port de bras en avant/en arrière','Grand port de bras','Port de bras en rond'],related:['Cambré','Arrondi','Allongé'],note:'Port de bras既是练习也是动作质感的要求'},
+  {french:'Cambré',japanese:'カンブレ',chinese:'躯干弯曲',purpose:'独立',body:'全身',type:'伸展',preview:'脊椎向某方向弯曲延伸，可向前、向后或向侧面',points:['弯曲从脊椎基部开始','向后弯曲时头随脊椎','保持核心支撑','不要塌腰而是延伸','配合呼吸进行'],combos:['Cambré en avant/en arrière/de côté'],related:['Port de bras','Penché']},
+  {french:'Sous-sus',japanese:'スー・スー',chinese:'并脚提踵',purpose:'独立',body:'脚',type:'平衡',preview:'双脚从五位并拢提至demi-pointe或pointe',points:['双脚并紧','同时提至demi-pointe或pointe','可向前移动','保持核心和外开','常用于旋转前的准备'],combos:['Sous-sus en pointe','Sous-sus → Pirouette'],related:['Relevé','Soutenu']},
+  {french:'Penché',japanese:'パンシェ',chinese:'前倾',purpose:'独立',body:'全身',type:'平衡',preview:'在arabesque基础上躯干向前倾斜，后腿随之抬高超过180度',points:['从arabesque开始','上身向前倾斜','后腿随之抬高','保持两腿形成一条直线','视线向下'],combos:['Arabesque penchée'],related:['Arabesque','Développé']},
+  {french:'Passé',japanese:'パッセ',chinese:'经过',purpose:'独立',body:'脚',type:'移动',preview:'腿经过retiré位置从前移至后（或反之）的过渡轨迹，课堂中也常指retiré的静止姿态',points:['动力脚从支撑腿的前侧上升，经过膝盖位置','最后落到支撑腿后侧（或者反过来）'],combos:['Développé passé','配合Pirouette预备'],related:['Retiré'],note:'此词与Retiré课堂中常互用'},
+];
+
+const concepts=[
+  {french:'Cou-de-pied',japanese:'クー・ドゥ・ピエ',chinese:'脚颈',ctype:'足部位置',preview:'脚踝关节处，腿部动作的重要停留位置',explanation:'脚踝关节处，腿部动作的重要停留位置。分为devant（前）和derrière（后）两种基本形态，以及专用于fondu的条件式位置',example:'Frappé从此位置出发；Fondu结束时动作腿收至此处；Petit battement在此位置前后交替',related:['Sur le cou-de-pied','Retiré'],note:'共三种形态：devant、derrière、以及fondu专用的条件式位置'},
+  {french:'Sur le cou-de-pied',japanese:'シュル・ル・クー・ドゥ・ピエ',chinese:'于脚颈上',ctype:'足部位置',preview:'动作腿置于支撑腿脚踝处的三种姿态',explanation:'三种姿态：①devant：脚跟在前包裹脚踝 ②derrière：脚背贴于脚踝后方 ③瓦岗体系中专用于Fondu的条件式位置（Conditional Sur le cou-de-pied）：动力脚的脚尖直接点在主力脚的大脚骨或脚踝高度，脚跟不接触',example:'Frappé的起始和结束位置；Fondu过程中的过渡位置',related:['Cou-de-pied','Retiré']},
+  {french:'Retiré',japanese:'ルティレ',chinese:'收腿位置',ctype:'足部位置',preview:'动作腿弯曲，脚尖点于支撑腿膝盖处的位置',explanation:'动作腿弯曲，脚尖点于支撑腿膝盖处的位置。分为devant（膝盖前方）、à la seconde（膝盖侧方）、derrière（膝盖后方）',example:'Pirouette在此位置旋转；Passé经过此位置；Développé从此位置展开',related:['Passé','Cou-de-pied']},
+  {french:'Cou-de-pied devant',japanese:'クー・ドゥ・ピエ・ドゥヴァン',chinese:'前位脚颈',ctype:'足部位置',preview:'Sur le cou-de-pied的前位：脚跟置于支撑腿脚踝正前方',explanation:'Sur le cou-de-pied的前位：动作脚的脚跟置于支撑腿脚踝正前方，脚趾自然弯曲包裹脚踝',example:'Frappé devant的起始位置',related:['Cou-de-pied derrière','Sur le cou-de-pied']},
+  {french:'Cou-de-pied derrière',japanese:'クー・ドゥ・ピエ・デリエール',chinese:'后位脚颈',ctype:'足部位置',preview:'Sur le cou-de-pied的后位：脚背贴于支撑腿脚踝正后方',explanation:'Sur le cou-de-pied的后位：动作脚的脚背贴于支撑腿脚踝正后方，脚趾向下延伸',example:'Frappé derrière的起始位置',related:['Cou-de-pied devant','Sur le cou-de-pied']},
+  {french:'Five Positions',japanese:'5つのポジション',chinese:'五个基本脚位',ctype:'足部位置',preview:'芭蕾的五个基本站立位置',explanation:'一位：脚跟并拢脚尖外开；二位：脚跟分开；三位：一脚跟贴另脚中段（较少用）；四位：前后位，有开放和交叉两种；五位：完全交叉，最常用',example:'几乎所有动作以五位起始和结束；Changement在五位间换脚',related:['Turnout','Plié','En croix']},
+  {french:'Demi-pointe',japanese:'ドゥミ・ポワント',chinese:'半脚尖',ctype:'足部位置',preview:'脚跟离地，用脚掌前端支撑体重的状态',explanation:'脚跟离地，用脚掌前端（跖骨）支撑体重的状态，区别于全脚尖（en pointe）',example:'Pirouette在demi-pointe上旋转；Relevé上升至demi-pointe',related:['En pointe','Relevé']},
+  {french:'En pointe',japanese:'アン・ポワント',chinese:'全脚尖',ctype:'足部位置',preview:'穿着足尖鞋用脚趾尖端支撑全身的状态',explanation:'穿着足尖鞋用脚趾尖端支撑全身的状态，需专业足尖鞋（pointe shoes）',example:'Arabesque en pointe；Pirouette en pointe；Sous-sus en pointe',related:['Demi-pointe']},
+  {french:'Pointed foot',japanese:'ポワンテ／つま先を伸ばす',chinese:'绷脚',ctype:'足部位置',preview:'脚背充分延伸，脚趾向远处拉长的标准足部形态',explanation:'脚背充分延伸，脚趾向远处拉长的足部形态，是腿部伸出时的标准足部要求',example:'Tendu结束时脚完全pointed；Grand battement踢出时脚必须pointed',related:['Flexed foot','Demi-pointe']},
+  {french:'Flexed foot',japanese:'フレックス',chinese:'勾脚',ctype:'足部位置',preview:'脚踝弯曲，脚趾朝小腿方向勾起的状态',explanation:'脚踝弯曲，脚趾朝小腿方向勾起的状态，古典芭蕾中较少单独使用，现代和当代芭蕾中常见',example:'现代和当代芭蕾中常见；某些伸展练习中使用',related:['Pointed foot']},
+  {french:'Devant',japanese:'ドゥヴァン',chinese:'前方',ctype:'方向',preview:'指身体或腿的前方方向',explanation:'指身体或腿的前方方向，动作朝向身体正前方',example:'Tendu devant：向前伸展；Attitude devant',related:['Derrière','En avant']},
+  {french:'Derrière',japanese:'デリエール',chinese:'后方',ctype:'方向',preview:'指身体或腿的后方方向',explanation:'指身体或腿的后方方向，动作朝向身体正后方',example:'Tendu derrière：向后伸展；Arabesque后腿伸展方向',related:['Devant','En arrière']},
+  {french:'À la seconde',japanese:'ア・ラ・スゴンド',chinese:'二位方向/侧面',ctype:'方向',preview:'指正侧面方向，与身体成90度',explanation:'指正侧面方向，与身体成90度的侧面位置，对应脚的二位',example:'Tendu à la seconde：向侧伸展；Grand battement à la seconde',related:['Devant','Derrière','En croix']},
+  {french:'En avant',japanese:'アン・アヴァン',chinese:'向前',ctype:'方向',preview:'向前方移动或延伸的方向',explanation:'向前方移动或延伸的方向',example:'Glissade en avant；Port de bras en avant',related:['En arrière','Devant']},
+  {french:'En arrière',japanese:'アン・アリエール',chinese:'向后',ctype:'方向',preview:'向后方移动或延伸的方向',explanation:'向后方移动或延伸的方向',example:'Glissade en arrière；Port de bras en arrière',related:['En avant','Derrière']},
+  {french:'De côté',japanese:'ドゥ・コテ',chinese:'向侧',ctype:'方向',preview:'向侧面移动的方向',explanation:'向侧面移动的方向',example:'Glissade de côté；Tombé de côté',related:['À la seconde']},
+  {french:'En croix',japanese:'アン・クロワ',chinese:'十字形',ctype:'方向',preview:'按前—侧—后—侧顺序向四个方向练习，形成十字形路径',explanation:'按照前—侧—后—侧的顺序向四个方向依次练习同一动作，形成十字形路径',example:'Tendu en croix；Grand battement en croix；几乎所有把杆动作都en croix练习',related:['Devant','Derrière','À la seconde']},
+  {french:'En dehors',japanese:'アン・ドゥオール',chinese:'向外',ctype:'旋转方向',preview:'旋转朝向支撑腿的外侧方向',explanation:'旋转方向词：旋转朝向支撑腿的外侧方向。右脚支撑则向右转，左脚支撑则向左转。也用于描述腿部的向外旋转（turnout）',example:'Pirouette en dehors；Rond de jambe en dehors（经前方画圆到后方）',related:['En dedans','Turnout']},
+  {french:'En dedans',japanese:'アン・ドゥダン',chinese:'向内',ctype:'旋转方向',preview:'旋转朝向支撑腿的内侧方向',explanation:'旋转方向词：旋转朝向支撑腿的内侧方向。右脚支撑则向左转，左脚支撑则向右转',example:'Pirouette en dedans；Rond de jambe en dedans（经后方画圆到前方）',related:['En dehors']},
+  {french:'Croisé',japanese:'クロワゼ',chinese:'交叉',ctype:'身体朝向',preview:'身体斜向观众，腿部交叉于身体前或后',explanation:'身体斜向观众，腿部交叉于身体前或后的站位方向。是芭蕾八个方位之一',example:'Croisé devant：面向斜前方，前腿交叉；Croisé derrière：后腿交叉',related:['Effacé','En face','Écarté']},
+  {french:'Effacé',japanese:'エファセ',chinese:'展开/消隐',ctype:'身体朝向',preview:'身体斜向观众，腿部展开不交叉',explanation:'身体斜向观众，但腿部展开不交叉的站位方向，与croisé相对',example:'Effacé devant：面向斜前方，前腿不交叉展开',related:['Croisé','Écarté']},
+  {french:'Écarté',japanese:'エカルテ',chinese:'分开',ctype:'身体朝向',preview:'身体斜向观众，腿向侧面伸展',explanation:'身体斜向观众，腿向侧面伸展的方向，分为devant（斜前）和derrière（斜后）',example:'Écarté devant：腿向斜前侧伸展；Développé écarté',related:['Croisé','Effacé']},
+  {french:'En face',japanese:'アン・ファス',chinese:'正面',ctype:'身体朝向',preview:'身体完全正对观众的站位方向',explanation:'身体完全正对观众的站位方向，是最基础的朝向',example:'基础把杆练习通常en face进行',related:['Croisé','Effacé']},
+  {french:'Épaulement',japanese:'エポールマン',chinese:'肩膀朝向',ctype:'身体朝向',preview:'肩膀和头部相对于身体方向的调整，使姿态更具立体感',explanation:'肩膀和头部相对于身体方向的调整，使姿态更具立体感和表现力。是芭蕾风格的重要元素之一',example:'几乎所有站位和动作都涉及épaulement',related:['Croisé','Effacé']},
+  {french:'Arrondi',japanese:'アロンディ',chinese:'圆形',ctype:'手臂形态',preview:'手臂或手腕保持圆弧形状，呈柔和曲线',explanation:'手臂或手腕保持圆弧形状，手指自然聚拢，呈柔和曲线的手臂形态',example:'标准手臂位置（一位、五位等）都是arrondi形态',related:['Allongé']},
+  {french:'Allongé',japanese:'アロンジェ',chinese:'延伸',ctype:'手臂形态',preview:'手臂伸长拉直，手指向远处延展',explanation:'手臂伸长拉直，脱离圆弧形态，手指向远处延展的手臂形态',example:'Arabesque手臂通常为allongé；某些port de bras结束时手臂延伸',related:['Arrondi']},
+  {french:'Bras bas',japanese:'ブラ・バ',chinese:'手臂预备位',ctype:'手臂形态',preview:'手臂自然下垂，略离身体，是手臂的起始和结束位置',explanation:'手臂自然下垂，略离身体，手指相对的预备位置，是手臂的起始和结束位置',example:'所有动作开始和结束时的手臂位置',related:["Première（手臂）"],note:'也称Preparatory position'},
+  {french:'Première（手臂）',japanese:'プルミエール（ブラ）',chinese:'手臂一位',ctype:'手臂形态',preview:'双臂在身体前方形成圆弧，手肘微弯，手指相对约在腰部高度',explanation:'双臂在身体前方形成圆弧，手肘微弯，手指相对约在腰部高度',example:'Pirouette收手臂至一位；Port de bras经过一位',related:['Bras bas',"Cinquième（手臂）"]},
+  {french:'Seconde（手臂）',japanese:'スゴンド（ブラ）',chinese:'手臂二位',ctype:'手臂形态',preview:'双臂向两侧展开，与肩同高或略低，手肘微弯',explanation:'双臂向两侧展开，与肩同高或略低，手肘微弯不锁死',example:'Arabesque à la seconde手臂；大跳时手臂展开',related:["Première（手臂）","Cinquième（手臂）"]},
+  {french:'Cinquième（手臂）',japanese:'サンキエム（ブラ）',chinese:'手臂五位',ctype:'手臂形态',preview:'双臂上举，在头顶上方形成圆弧，手指相对',explanation:'双臂上举，在头顶上方形成圆弧，手指相对。各流派对高度略有不同',example:'跳跃顶点时手臂五位；Arabesque某些变形',related:["Première（手臂）","Seconde（手臂）"],note:'不同流派（Vaganova/RAD/Cecchetti）定义略不同'},
+  {french:'Turnout',japanese:'ターンアウト',chinese:'外开',ctype:'其他概念',preview:'髋关节向外旋转，使双腿和脚尖向两侧打开的基础体态',explanation:'髋关节向外旋转，使双腿和脚尖向两侧打开的基础体态，是芭蕾所有动作的根基。外开应来自髋关节而非强迫膝盖或脚踝扭转',example:'所有脚位和动作都建立在外开基础上',related:['En dehors','Five Positions']},
+  {french:"En l'air",japanese:'アン・レール',chinese:'在空中',ctype:'其他概念',preview:'描述腿部抬起离地或动作在空中完成的状态',explanation:'描述腿部抬起离地或动作在空中完成的状态',example:"Rond de jambe en l'air；Entrechat（空中击腿）",related:['Par terre']},
+  {french:'Par terre',japanese:'パール・テール',chinese:'在地面',ctype:'其他概念',preview:'描述动作在地面进行，脚不离地的状态',explanation:'描述动作在地面进行，脚不离地的状态',example:'Rond de jambe par terre；Tendu par terre',related:["En l'air"]},
+  {french:'Demi',japanese:'ドゥミ',chinese:'半/小',ctype:'其他概念',preview:"表示'半'或'小'的修饰词，与grand相对",explanation:"表示'半'或'小'的修饰词，与grand相对",example:'Demi-plié；Demi-pointe；Demi-seconde',related:['Grand']},
+  {french:'Grand',japanese:'グラン',chinese:'大/全',ctype:'其他概念',preview:"表示'大'或'全'的修饰词，与demi相对",explanation:"表示'大'或'全'的修饰词，与demi相对",example:'Grand plié；Grand battement；Grand jeté',related:['Demi']},
+  {french:'Ouvert',japanese:'ウーヴェール',chinese:'开',ctype:'其他概念',preview:"描述姿态或位置是'开放'的，与fermé相对",explanation:"描述姿态或位置是'开放'的，与fermé相对",example:'Sissonne ouverte；四位ouvert',related:['Fermé']},
+  {french:'Fermé',japanese:'フェルメ',chinese:'闭',ctype:'其他概念',preview:"描述姿态或位置是'闭合'的，与ouvert相对",explanation:"描述姿态或位置是'闭合'的，与ouvert相对",example:'Sissonne fermée；四位fermé',related:['Ouvert']},
+  {french:'Dessus',japanese:'ドゥスュ',chinese:'上方/过上',ctype:'其他概念',preview:'动作腿经过支撑腿上方（前方）通过的方向',explanation:'动作腿经过支撑腿上方（前方）通过的方向，与dessous相对',example:'Pas de bourrée dessus；Assemblé dessus',related:['Dessous']},
+  {french:'Dessous',japanese:'ドゥスー',chinese:'下方/过下',ctype:'其他概念',preview:'动作腿经过支撑腿下方（后方）通过的方向',explanation:'动作腿经过支撑腿下方（后方）通过的方向，与dessus相对',example:'Pas de bourrée dessous；Assemblé dessous',related:['Dessus'],note:'注意：dessus和dessous发音相近，日语注音请校阅'},
+  {french:'En cloche',japanese:'アン・クロッシュ',chinese:'钟摆',ctype:'其他概念',preview:'动作腿前后交替摆动如钟摆的练习方式',explanation:'动作腿前后交替摆动如钟摆的练习方式',example:'Grand battement en cloche；Dégagé en cloche',related:['En croix']},
+  {french:'Batterie',japanese:'バトリー',chinese:'击打类',ctype:'其他概念',preview:'跳跃中双腿相互击打的动作总类',explanation:'跳跃中双腿相互击打的动作总类，包含entrechat、brisé、cabriole battu等',example:'Entrechat是batterie的代表；Brisé属于batterie',related:['Entrechat','Brisé']},
+  {french:'Allegro',japanese:'アレグロ',chinese:'快板',ctype:'其他概念',preview:'课堂中指快速跳跃组合的练习环节',explanation:'课堂中指快速跳跃组合的练习环节，通常分为petit allegro（小跳）和grand allegro（大跳）',example:'课堂结构：把杆→中间练习→Adage→Petit allegro→Grand allegro',related:['Adage'],note:'Allegro是速度和课堂结构的描述'},
+  {french:'Spotting',japanese:'スポッティング',chinese:'定点法',ctype:'其他概念',preview:'旋转时视线快速锁定固定点，防止头晕并保持方向',explanation:'旋转时视线快速锁定一个固定点，每次转体时迅速将目光回到该点，防止头晕并保持方向',example:'Pirouette、Fouetté、Chaîné等所有旋转动作都需要spotting',related:['Pirouette','Chaîné','Fouetté']},
+];
+
+const allVocab=actions.length+concepts.length;
+
+function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function parseKey(k){const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d);}
+function hasContent(n){return n&&FIELDS.some(f=>n[f.key]);}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&t==='notes')||(i===1&&t==='vocab')));
+  document.getElementById('tab-notes').classList.toggle('active',t==='notes');
+  document.getElementById('tab-vocab').classList.toggle('active',t==='vocab');
+}
+function switchVType(el){
+  currentVType=el.dataset.vtype;
+  document.querySelectorAll('.vtype-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('action-filters').style.display=currentVType==='concept'?'none':'flex';
+  document.getElementById('concept-filters').style.display=currentVType==='action'?'none':'flex';
+  renderVocab();
+}
+function shiftMonths(d){baseMonth=new Date(baseMonth.getFullYear(),baseMonth.getMonth()+d,1);renderCalendar();}
+function renderCalendar(){
+  const m1=new Date(baseMonth),m2=new Date(baseMonth.getFullYear(),baseMonth.getMonth()+1,1);
+  document.getElementById('cal-range').textContent=`${m1.getFullYear()}年${MONTHS[m1.getMonth()]} — ${m2.getFullYear()}年${MONTHS[m2.getMonth()]}`;
+  document.getElementById('cal-months').innerHTML=renderMonth(m1)+renderMonth(m2);
+  updateStats();
+}
+function renderMonth(first){
+  const y=first.getFullYear(),mo=first.getMonth(),last=new Date(y,mo+1,0).getDate(),dow=first.getDay();
+  let h=`<div><div class="cal-month-title">${y}年${MONTHS[mo]}</div><div class="cal-grid">`;
+  ['日','一','二','三','四','五','六'].forEach(d=>{h+=`<div class="cal-dow">${d}</div>`;});
+  for(let i=0;i<dow;i++)h+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=last;d++){
+    const k=`${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    h+=`<div class="cal-day${k===todayKey?' today':''}${hasContent(notes[k])?' marked has-note':''}" onclick="clickDay('${k}')">${d}</div>`;
+  }
+  return h+`</div></div>`;
+}
+function clickDay(k){
+  editingDate=k;
+  const n=notes[k]||{},d=parseKey(k);
+  document.getElementById('modal-title').textContent=`${d.getFullYear()}年${MONTHS[d.getMonth()]}${d.getDate()}日`;
+  document.getElementById('field-class').value=n.cls||'';
+  document.getElementById('field-new').value=n.newContent||'';
+  document.getElementById('field-progress').value=n.progress||'';
+  document.getElementById('field-improve').value=n.improve||'';
+  document.getElementById('btn-delete').style.visibility=hasContent(n)?'visible':'hidden';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');editingDate=null;renderCalendar();renderNoteList();}
+function closeModalOutside(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function saveNote(){
+  if(!editingDate)return;
+  const n={cls:document.getElementById('field-class').value.trim(),newContent:document.getElementById('field-new').value.trim(),progress:document.getElementById('field-progress').value.trim(),improve:document.getElementById('field-improve').value.trim()};
+  if(FIELDS.some(f=>n[f.key]))notes[editingDate]=n; else delete notes[editingDate];
+  persist();closeModal();
+}
+function deleteNote(){if(!editingDate)return;delete notes[editingDate];persist();closeModal();}
+function updateStats(){
+  const y=baseMonth.getFullYear(),mo=baseMonth.getMonth(),last=new Date(y,mo+1,0).getDate();
+  let train=0,nc=0,streak=0,cur=0;
+  for(let d=1;d<=last;d++){
+    const k=`${y}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(hasContent(notes[k])){train++;cur++;streak=Math.max(streak,cur);}else cur=0;
+    if(hasContent(notes[k]))nc++;
+  }
+  document.getElementById('stat-total').textContent=train;
+  document.getElementById('stat-notes').textContent=nc;
+  document.getElementById('stat-streak').textContent=streak;
+}
+function renderNoteList(){
+  const list=document.getElementById('note-list');
+  const entries=Object.entries(notes).filter(([,n])=>hasContent(n)).sort((a,b)=>b[0].localeCompare(a[0]));
+  if(!entries.length){list.innerHTML='<div class="note-empty">还没有笔记，点击日历上的日期开始记录</div>';return;}
+  list.innerHTML=entries.map(([k,n])=>{
+    const d=parseKey(k);
+    return`<div class="note-card" onclick="clickDay('${k}')"><div class="note-date-row"><div class="note-dot"></div><div class="note-date">${d.getFullYear()}年${MONTHS[d.getMonth()]}${d.getDate()}日</div></div>${FIELDS.filter(f=>n[f.key]).map(f=>`<div class="note-field"><span class="note-field-label">${f.label}：</span><span class="note-field-text">${n[f.key]}</span></div>`).join('')}</div>`;
+  }).join('');
+}
+function showAddInput(){const i=document.getElementById('task-add-input');i.classList.add('visible');i.focus();}
+function handleAddTask(e){
+  if(e.key==='Enter'){const i=document.getElementById('task-add-input'),t=i.value.trim();if(t){tasks.push({id:nextTaskId++,text:t,done:false});persist();renderTasks();}i.value='';i.classList.remove('visible');}
+  else if(e.key==='Escape'){const i=document.getElementById('task-add-input');i.value='';i.classList.remove('visible');}
+}
+function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;persist();renderTasks();}}
+function renderTasks(){
+  const p=tasks.filter(t=>!t.done),d=tasks.filter(t=>t.done);
+  document.getElementById('task-list').innerHTML=p.length?p.map(t=>`<div class="task-item"><div class="task-cb" onclick="toggleTask(${t.id})"></div><div class="task-text">${t.text}</div></div>`).join(''):'<div class="task-empty">还没有课题</div>';
+  document.getElementById('resolved-list').innerHTML=d.length?d.map(t=>`<div class="task-item"><div class="task-cb done" onclick="toggleTask(${t.id})"></div><div class="task-text done">${t.text}</div></div>`).join(''):'<div class="task-empty">暂无</div>';
+  if(resolvedOpen){const b=document.getElementById('resolved-body');b.style.maxHeight=b.scrollHeight+'px';}
+}
+function toggleTaskSec(){
+  taskSecOpen=!taskSecOpen;
+  const b=document.getElementById('task-sec-body'),a=document.getElementById('task-sec-arrow');
+  if(taskSecOpen){b.classList.remove('closed');b.style.maxHeight=b.scrollHeight+'px';a.classList.add('open');}
+  else{b.style.maxHeight=b.scrollHeight+'px';requestAnimationFrame(()=>b.classList.add('closed'));a.classList.remove('open');}
+}
+function toggleResolved(){
+  resolvedOpen=!resolvedOpen;
+  const b=document.getElementById('resolved-body'),a=document.getElementById('resolved-arrow');
+  if(resolvedOpen){b.classList.remove('closed');b.style.maxHeight=b.scrollHeight+'px';a.classList.add('open');}
+  else{b.style.maxHeight=b.scrollHeight+'px';requestAnimationFrame(()=>b.classList.add('closed'));a.classList.remove('open');}
+}
+function toggleSidebar(){
+  const sb=document.getElementById('vocab-sidebar');sb.classList.toggle('collapsed');
+  sb.querySelector('.sb-toggle').textContent=sb.classList.contains('collapsed')?'▶':'◀';
+}
+function toggleLearnedSec(){
+  learnedSecOpen=!learnedSecOpen;
+  const b=document.getElementById('sec-body'),a=document.getElementById('sec-arrow');
+  if(learnedSecOpen){b.classList.remove('closed');b.style.maxHeight=b.scrollHeight+'px';a.classList.add('open');}
+  else{b.style.maxHeight=b.scrollHeight+'px';requestAnimationFrame(()=>b.classList.add('closed'));a.classList.remove('open');}
+}
+function toggleFilter(el){
+  const g=el.dataset.group,v=el.dataset.value;
+  vFilters[g]=v;
+  document.querySelectorAll(`[data-group="${g}"]`).forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');renderVocab();
+}
+function toggleLearn(key,e){
+  e.stopPropagation();
+  if(learned.has(key))learned.delete(key);else learned.add(key);
+  persist();updateLearnedSidebar();renderVocab();
+}
+function toggleExpand(key){vExpanded=vExpanded===key?null:key;renderVocab();}
+function jumpTo(french){
+  const inA=actions.find(a=>a.french===french),inC=concepts.find(c=>c.french===french);
+  if(inA){currentVType='all';document.querySelectorAll('.vtype-tab').forEach((t,i)=>t.classList.toggle('active',i===0));document.getElementById('action-filters').style.display='flex';document.getElementById('concept-filters').style.display='flex';}
+  else if(inC){currentVType='concept';document.querySelectorAll('.vtype-tab').forEach((t,i)=>t.classList.toggle('active',i===2));document.getElementById('action-filters').style.display='none';document.getElementById('concept-filters').style.display='flex';}
+  document.getElementById('search').value=french;vExpanded=french;renderVocab();
+}
+function updateLearnedSidebar(){
+  const pct=Math.round(learned.size/allVocab*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-count').textContent=`${learned.size} / ${allVocab} 个词条`;
+  const all=[...actions,...concepts].filter(v=>learned.has(v.french));
+  document.getElementById('learned-list').innerHTML=all.length?all.map(v=>`<div class="sb-item"><div class="sb-check">✓</div><div><div class="sb-name">${v.french}</div><div class="sb-sub">${v.japanese}</div></div></div>`).join(''):'<div class="sb-empty">勾选后显示</div>';
+  const b=document.getElementById('sec-body');if(learnedSecOpen)b.style.maxHeight=b.scrollHeight+'px';
+}
+function makeCard(v,isConcept){
+  const key=v.french,sk=key.replace(/'/g,"\\'"),isExp=vExpanded===key,isL=learned.has(key);
+  const badge=isConcept?`<span class="concept-type-badge">${v.ctype}</span>`:`<span class="purpose-badge purpose-${v.purpose}">${v.purpose==='独立'?'独立':v.purpose==='过渡'?'过渡':'兼用'}</span>`;
+  const tags=isConcept?'':`<div class="card-tags"><span class="mini-tag">${v.body}</span><span class="mini-tag">${v.type}</span></div>`;
+  const det=isConcept
+    ?`<div class="detail-section"><div class="detail-label">核心解释</div><div style="font-size:12px;color:var(--text);line-height:1.6">${v.explanation}</div></div><div class="detail-section"><div class="detail-label">在动作中如何体现</div><div style="font-size:12px;color:var(--text2);line-height:1.6">${v.example}</div></div>${v.note?`<div class="detail-section"><div class="detail-label">备注</div><div style="font-size:11px;color:var(--text3)">${v.note}</div></div>`:''}`
+    :`<div class="detail-section"><div class="detail-label">动作要点</div><ul class="detail-list">${v.points.map(p=>`<li>${p}</li>`).join('')}</ul></div><div class="detail-section"><div class="detail-label">常见变形与连接</div>${v.combos.map(c=>`<div class="combo-item">${c}</div>`).join('')}</div>${v.note?`<div class="detail-section"><div class="detail-label">备注</div><div style="font-size:11px;color:var(--text3)">${v.note}</div></div>`:''}`;
+  const rel=v.related&&v.related.length?`<div class="detail-section"><div class="detail-label">关联词条</div><div>${v.related.map(r=>`<span class="related-item" onclick="jumpTo('${r}')">${r}</span>`).join('')}</div></div>`:'';
+  return`<div class="card${isExp?' expanded':''}${isL?' learned':''}${isConcept?' concept-card':''}"><div class="card-header"><div class="checkbox${isL?' checked':''}" onclick="toggleLearn('${sk}',event)"></div><div class="card-title" onclick="toggleExpand('${sk}')"><div class="french-name">${v.french}</div><div class="japanese-name">${v.japanese}</div>${v.chinese?`<div class="chinese-name">${v.chinese}</div>`:''}</div>${badge}</div>${tags}<div class="card-preview" onclick="toggleExpand('${sk}')">${v.preview}</div><div class="card-detail">${det}${rel}</div><div class="expand-hint" onclick="toggleExpand('${sk}')">${isExp?'▲ 收起':'▼ 展开详情'}</div></div>`;
+}
+function renderVocab(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const fa=currentVType!=='concept'?actions.filter(v=>{
+    const ms=!q||v.french.toLowerCase().includes(q)||v.japanese.includes(q)||(v.chinese&&v.chinese.includes(q));
+    return ms&&(vFilters.purpose==='all'||v.purpose===vFilters.purpose)&&(vFilters.body==='all'||v.body===vFilters.body)&&(vFilters.type==='all'||v.type===vFilters.type);
+  }):[];
+  const fc=currentVType!=='action'?concepts.filter(v=>{
+    const ms=!q||v.french.toLowerCase().includes(q)||v.japanese.includes(q)||(v.chinese&&v.chinese.includes(q));
+    return ms&&(vFilters.ctype==='all'||v.ctype===vFilters.ctype);
+  }):[];
+  document.getElementById('results-count').textContent=`共 ${fa.length+fc.length} 个词条`;
+  let h='';
+  if(fa.length)h+=`<div class="vocab-section"><div class="vocab-section-label">动作词条 <span class="count">${fa.length}</span></div><div class="card-grid">${fa.map(v=>makeCard(v,false)).join('')}</div></div>`;
+  if(fc.length)h+=`<div class="vocab-section"><div class="vocab-section-label">概念词条 <span class="count">${fc.length}</span></div><div class="card-grid">${fc.map(v=>makeCard(v,true)).join('')}</div></div>`;
+  if(!h)h='<div class="vempty">没有找到匹配的词条</div>';
+  document.getElementById('vocab-output').innerHTML=h;
+}
+
+renderCalendar();renderNoteList();renderVocab();renderTasks();updateLearnedSidebar();
+</script>
+</body>
+</html>
