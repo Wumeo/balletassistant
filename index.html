@@ -4,6 +4,10 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Ballet Dictionary</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Ballet"/>
+<meta name="theme-color" content="#FAFAF8"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -196,6 +200,28 @@ textarea:focus{outline:none;border-color:var(--purple);}
 .related-item:hover{background:#CECBF6;}
 .expand-hint{font-size:11px;color:var(--text3);margin-top:7px;cursor:pointer;}
 .vempty{text-align:center;padding:2rem 0;color:var(--text2);font-size:13px;}
+/* ── Install banner ── */
+.install-banner{
+  position:fixed;bottom:70px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);
+  border-radius:var(--radius-lg);
+  padding:14px 18px;
+  width:calc(100% - 32px);max-width:360px;
+  box-shadow:0 4px 20px rgba(0,0,0,.18);
+  z-index:200;
+  display:none;
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0;}to{transform:translateX(-50%) translateY(0);opacity:1;}}
+.install-banner.show{display:block;}
+.install-banner-title{font-size:14px;font-weight:500;margin-bottom:6px;}
+.install-banner-steps{font-size:12px;opacity:.75;line-height:1.8;margin-bottom:12px;}
+.install-banner-steps b{opacity:1;font-weight:500;}
+.install-banner-footer{display:flex;justify-content:flex-end;}
+.install-banner-close{font-size:12px;opacity:.6;cursor:pointer;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:6px;}
+.install-banner-close:hover{opacity:1;}
+@media(min-width:641px){.install-banner{display:none!important;}}
+
 
 /* ── Mobile bottom nav ── */
 .mobile-nav{display:none;}
@@ -503,7 +529,24 @@ textarea:focus{outline:none;border-color:var(--purple);}
     <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     词汇库
   </button>
+  <button class="mobile-nav-btn" onclick="showInstall()">
+    <svg viewBox="0 0 24 24"><path d="M12 16l-4-4h3V4h2v8h3z"/><path d="M20 18H4v2h16z"/></svg>
+    添加
+  </button>
 </nav>
+<!-- Install banner -->
+<div class="install-banner" id="install-banner">
+  <div class="install-banner-title">添加到主屏幕</div>
+  <div class="install-banner-steps">
+    1. 点击底部 <b>分享</b> 按钮 □↑<br/>
+    2. 向下滚动找到 <b>添加到主屏幕</b><br/>
+    3. 点击右上角 <b>添加</b>
+  </div>
+  <div class="install-banner-footer">
+    <span class="install-banner-close" onclick="dismissInstall()">知道了</span>
+  </div>
+</div>
+
 
 <script>
 const MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -890,6 +933,20 @@ window.updateLearnedSidebar=function(){
 window.addEventListener('resize',initMobile);
 initMobile();
 updateMobileTaskBadge();
+
+// ── Install to home screen ──
+function showInstall(){
+  document.getElementById('install-banner').classList.add('show');
+}
+function dismissInstall(){
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('ballet_install_dismissed','1');
+}
+// show banner automatically once on first mobile visit
+if(isMobile() && !localStorage.getItem('ballet_install_dismissed') && !navigator.standalone){
+  setTimeout(()=>document.getElementById('install-banner').classList.add('show'), 2000);
+}
+
 </script>
 </body>
 </html>
